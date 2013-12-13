@@ -1,6 +1,4 @@
 *.class
-
-# Package Files #
-*.jar
-*.war
-*.ear
+LD28-android/bin
+LD28-html
+LD28-ios
