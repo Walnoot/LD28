@@ -1,4 +1,6 @@
 *.class
+Thumbs.db
+LD28-desktop/bin
 LD28-android/bin
 LD28-html
 LD28-ios

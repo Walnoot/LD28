@@ -1,66 +1,80 @@
 package walnoot.ld28;
 
-import com.badlogic.gdx.ApplicationListener;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL10;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import walnoot.ld28.screens.LoadingScreen;
+import walnoot.ld28.screens.UpdateScreen;
 
-public class LD28Game implements ApplicationListener {
-	private OrthographicCamera camera;
-	private SpriteBatch batch;
-	private Texture texture;
-	private Sprite sprite;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+
+public class LD28Game extends Game{
+	public static final float UPDATES_PER_SECOND = 60f;
+	public static final float SECONDS_PER_UPDATE = 1 / UPDATES_PER_SECOND;
+	
+	private UpdateScreen updateScreen;
+	private float unprocessedSeconds;
+	
+	private InputMultiplexer inputs = new InputMultiplexer();
+	
+	private Stage stage;
 	
 	@Override
-	public void create() {		
-		float w = Gdx.graphics.getWidth();
-		float h = Gdx.graphics.getHeight();
+	public void create(){
+		Gdx.input.setInputProcessor(inputs);
 		
-		camera = new OrthographicCamera(1, h/w);
-		batch = new SpriteBatch();
+		stage = new Stage();
+		addInputProcessor(stage);
+		addInputProcessor(InputHandler.get());
 		
-		texture = new Texture(Gdx.files.internal("data/libgdx.png"));
-		texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+		setScreen(new LoadingScreen(this));
+	}
+	
+	@Override
+	public void render(){
+//		if(Gdx.input.isKeyPressed(Keys.ESCAPE)) Gdx.app.exit();
 		
-		TextureRegion region = new TextureRegion(texture, 0, 0, 512, 275);
+		unprocessedSeconds += Gdx.graphics.getDeltaTime();
+		while(unprocessedSeconds > SECONDS_PER_UPDATE){
+			unprocessedSeconds -= SECONDS_PER_UPDATE;
+			
+			updateScreen.update();
+			InputHandler.get().update();
+		}
 		
-		sprite = new Sprite(region);
-		sprite.setSize(0.9f, 0.9f * sprite.getHeight() / sprite.getWidth());
-		sprite.setOrigin(sprite.getWidth()/2, sprite.getHeight()/2);
-		sprite.setPosition(-sprite.getWidth()/2, -sprite.getHeight()/2);
-	}
-
-	@Override
-	public void dispose() {
-		batch.dispose();
-		texture.dispose();
-	}
-
-	@Override
-	public void render() {		
-		Gdx.gl.glClearColor(1, 1, 1, 1);
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+		super.render();
 		
-		batch.setProjectionMatrix(camera.combined);
-		batch.begin();
-		sprite.draw(batch);
-		batch.end();
+		stage.act();
+		stage.draw();
+		
+		Table.drawDebug(stage);
 	}
-
-	@Override
-	public void resize(int width, int height) {
+	
+	public boolean needsGL20(){
+		return true;
 	}
-
+	
 	@Override
-	public void pause() {
+	public void setScreen(Screen screen){
+		inputs.removeProcessor(updateScreen);
+		
+		if(!(screen instanceof UpdateScreen))
+			throw new IllegalArgumentException("Screen must be instace of UpdateScreen");
+		
+		super.setScreen(screen);
+		updateScreen = (UpdateScreen) screen;
+		
+		inputs.addProcessor((InputProcessor) screen);
 	}
-
-	@Override
-	public void resume() {
+	
+	public void addInputProcessor(InputProcessor processor){
+		inputs.addProcessor(processor);
+	}
+	
+	public Stage getStage(){
+		return stage;
 	}
 }
