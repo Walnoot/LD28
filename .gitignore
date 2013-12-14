@@ -2,5 +2,7 @@
 Thumbs.db
 LD28-desktop/bin
 LD28-android/bin
+LD28-android/assets/pack.png
+LD28-android/assets/pack.atlas
 LD28-html
 LD28-ios
