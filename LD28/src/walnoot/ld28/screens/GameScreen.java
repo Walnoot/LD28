@@ -2,21 +2,31 @@ package walnoot.ld28.screens;
 
 import walnoot.ld28.InputHandler;
 import walnoot.ld28.LD28Game;
-import walnoot.ld28.Node;
 import walnoot.ld28.Util;
+import walnoot.ld28.world.Background;
+import walnoot.ld28.world.Connection;
+import walnoot.ld28.world.GranaryNode;
+import walnoot.ld28.world.Node;
+import walnoot.ld28.world.NodeType;
+import walnoot.ld28.world.Unit;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Buttons;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.List;
+import com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
 
 public class GameScreen extends UpdateScreen{
 	private static final float MIN_DISTANCE = 1f;
@@ -25,16 +35,20 @@ public class GameScreen extends UpdateScreen{
 	private static final Vector2 TMP_2 = new Vector2();
 	private static final Vector3 TMP_3 = new Vector3();
 	
-	private final Node root;
 	private Node selectedNode;
+	private Array<Node> nodes = new Array<Node>(false, 32);
+	private Array<Connection> connections = new Array<Connection>(false, 32);
+	private Array<Unit> units = new Array<Unit>(false, 32);
+	
 	private final SpriteBatch batch;
 	private final OrthographicCamera camera;
 	
 	private Sprite preview;
 	
-	private Stage stage;
-	
 	private Mode mode = Mode.NONE;
+	private List buildList;
+	
+	private Background background;
 	
 	public GameScreen(LD28Game game){
 		super(game);
@@ -45,21 +59,30 @@ public class GameScreen extends UpdateScreen{
 		batch = new SpriteBatch(100, shader);
 		camera = new OrthographicCamera();
 		
-		root = new Node(0f, 0f, null);
-		root.setSelected(true);
+		addNode(new GranaryNode(Vector2.Zero, this));
 		
-		selectedNode = root;
-		
-		preview = new Sprite(Util.DOT_TEXTURE);
+		preview = new Sprite(Util.ATLAS.findRegion("granary"));
 		preview.setSize(1f, 1f);
 		preview.setOrigin(0.5f, 0.5f);
+		
+		background = new Background(camera);
 		
 		setupUI();
 	}
 	
 	private void setupUI(){
-		stage = new Stage(960, 540, true, batch);
-		stage.addActor(new Image(Util.HAMMER_TEXTURE));
+		game.getStage().clear();
+		
+		BitmapFont font = new BitmapFont();
+		TextureRegionDrawable drawable = new TextureRegionDrawable(Util.ATLAS.findRegion("border"));
+		ListStyle style = new ListStyle(font, Color.WHITE, Color.GRAY, drawable);
+		
+		Table table = new Table();
+		table.top().left().setFillParent(true);
+		game.getStage().addActor(table);
+		
+		buildList = new List(NodeType.values(), style);
+		table.add(buildList);
 	}
 	
 	@Override
@@ -71,19 +94,42 @@ public class GameScreen extends UpdateScreen{
 		batch.setProjectionMatrix(camera.combined);
 		
 		batch.begin();
-		root.render(batch, true);
-		root.render(batch, false);
+		
+		background.render(batch);
+		
+		for(Connection c : connections){
+			c.render(batch);
+		}
+		
+		for(Node n : nodes){
+			n.render(batch);
+		}
+		
+		for(Unit u : units){
+			u.render(batch);
+		}
 		
 		if(mode == Mode.BUILD) preview.draw(batch);
 		
 		batch.end();
-		
-		stage.draw();
 	}
 	
 	@Override
 	public void update(){
-		root.update();
+		for(Node n : nodes){
+			n.update();
+		}
+		
+		for(Unit u : units){
+			u.update();
+		}
+		
+		for(int i = 0; i < units.size; i++){
+			Unit unit = units.get(i);
+			
+			if(!unit.removed) unit.update();
+			if(unit.removed) units.removeIndex(i--);
+		}
 		
 		camera.unproject(TMP_3.set(Gdx.input.getX(), Gdx.input.getY(), 0f));
 		
@@ -92,17 +138,31 @@ public class GameScreen extends UpdateScreen{
 		switch (mode){
 			case NONE:
 				if(InputHandler.get().isJustTouched(Buttons.LEFT)){
-					Node node = root.getNode(TMP_2);
+					Node node = null;
 					
-					if(node != null){
-						selectedNode.setSelected(false);
-						selectedNode = node;
-						selectedNode.setSelected(true);
+					for(Node n : nodes){
+						if(n.hits(TMP_2)){
+							node = n;
+							break;
+						}
 					}
+					
+					if(selectedNode != null) selectedNode.setSelected(false);
+					selectedNode = node;
+					if(node != null) selectedNode.setSelected(true);
 				}
 				
 				break;
 			case BUILD:
+				for(int i = 0; i < NodeType.values().length; i++){
+					NodeType type = NodeType.values()[i];
+					
+					if(type.getKey().isJustPressed()){
+						buildList.setSelectedIndex(i);
+						break;
+					}
+				}
+				
 				TMP_2.sub(selectedNode.position);
 				
 				if(TMP_2.len2() < MIN_DISTANCE * MIN_DISTANCE) TMP_2.nor().scl(MIN_DISTANCE);
@@ -110,10 +170,20 @@ public class GameScreen extends UpdateScreen{
 				
 				TMP_2.add(selectedNode.position);
 				
-				preview.setPosition(TMP_2.x - preview.getOriginX(), TMP_2.y - preview.getOriginY());
+				boolean buildable = true;
 				
-				if(InputHandler.get().isJustTouched(Buttons.LEFT)){
-					root.addChild(new Node(TMP_2, selectedNode));
+				for(Node n : nodes){
+					if(n.hits(TMP_2, 0.5f)) buildable = false;
+				}
+				
+				preview.setPosition(TMP_2.x - preview.getOriginX(), TMP_2.y - preview.getOriginY());
+				preview.setColor(buildable ? Color.WHITE : Color.RED);
+				
+				if(buildable && InputHandler.get().isJustTouched(Buttons.LEFT)){
+					Node newNode = getNodeType().newNode(TMP_2, this);
+					addNode(newNode);
+					addConnection(new Connection(selectedNode, newNode));
+					
 					mode = Mode.NONE;
 				}
 				
@@ -137,8 +207,26 @@ public class GameScreen extends UpdateScreen{
 		camera.zoom += InputHandler.get().getScrollAmount();
 		camera.zoom = MathUtils.clamp(camera.zoom, 1f, 10f);
 		
-		if(InputHandler.get().build.isJustPressed()) mode = Mode.BUILD;
+		if(InputHandler.get().build.isJustPressed() && selectedNode != null) mode = Mode.BUILD;
 		else if(InputHandler.get().quit.isJustPressed()) mode = Mode.NONE;
+		
+		buildList.setVisible(mode == Mode.BUILD);
+	}
+	
+	private NodeType getNodeType(){
+		return NodeType.values()[buildList.getSelectedIndex()];
+	}
+	
+	public void addNode(Node n){
+		nodes.add(n);
+	}
+	
+	public void addConnection(Connection c){
+		connections.add(c);
+	}
+	
+	public void addUnit(Unit u){
+		units.add(u);
 	}
 	
 	@Override

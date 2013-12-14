@@ -22,6 +22,9 @@ public class InputHandler implements InputProcessor{
 	public Key build = new Key(B);
 	public Key quit = new Key(ESCAPE);
 	
+	public Key buildFarm = new Key(F);
+	public Key buildGranary = new Key(G);
+	
 	private ArrayList<Key> keys;
 	private boolean keyDown;
 	private int scrollAmount;
@@ -44,6 +47,10 @@ public class InputHandler implements InputProcessor{
 		for(int i = 0; i < justTouched.length; i++){
 			justTouched[i] = false;
 		}
+	}
+	
+	public Key newKey(int... keys){
+		return new Key(keys);
 	}
 	
 	public boolean isAnyKeyDown(){
@@ -149,6 +156,10 @@ public class InputHandler implements InputProcessor{
 		
 		public boolean isJustPressed(){
 			return justPressed;
+		}
+		
+		public int getFirstKey(){
+			return keyCodes[0];
 		}
 	}
 }

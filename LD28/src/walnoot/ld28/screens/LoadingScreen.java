@@ -5,12 +5,11 @@ import walnoot.ld28.Util;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
 public class LoadingScreen extends UpdateScreen{
-	private static final String TEST = "test.png";
-	private static final String HAMMER = "hammer.png";
-	private static final String DOT = "dot.png";
+	private static final String BACKGROUND = "background.png";
+	private static final String ATLAS = "pack.atlas";
 	
 	private AssetManager assetManager;
 	
@@ -18,9 +17,8 @@ public class LoadingScreen extends UpdateScreen{
 		super(game);
 		
 		assetManager = new AssetManager();
-		assetManager.load(DOT, Texture.class);
-		assetManager.load(HAMMER, Texture.class);
-		assetManager.load(TEST, Texture.class);
+		assetManager.load(ATLAS, TextureAtlas.class);
+		assetManager.load(BACKGROUND, Texture.class);
 	}
 	
 	@Override
@@ -30,12 +28,8 @@ public class LoadingScreen extends UpdateScreen{
 	@Override
 	public void update(){
 		if(assetManager.update()){
-			Util.DOT_TEXTURE = assetManager.get(DOT);
-			Util.DOT_TEXTURE.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-			Util.HAMMER_TEXTURE = assetManager.get(HAMMER);
-			Util.HAMMER_TEXTURE.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-			Util.TEST_TEXTURE = assetManager.get(TEST);
-			Util.TEST_TEXTURE.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+			Util.ATLAS = assetManager.get(ATLAS);
+			Util.BACKGROUND = assetManager.get(BACKGROUND);
 			
 			game.setScreen(new GameScreen(game));
 		}
