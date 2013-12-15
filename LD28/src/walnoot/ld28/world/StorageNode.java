@@ -10,12 +10,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.ObjectIntMap;
 import com.badlogic.gdx.utils.ObjectMap;
 
-public class GranaryNode extends Node{
+public class StorageNode extends Node{
 	private ObjectIntMap<ResourceType> resources = new ObjectIntMap<Resource.ResourceType>();
 	private ObjectMap<ResourceType, Label> labelMap = new ObjectMap<Resource.ResourceType, Label>();
 	
-	public GranaryNode(Vector2 pos, GameScreen screen){
-		super(pos, screen, NodeType.GRANARY.getRegion());
+	public StorageNode(Vector2 pos, GameScreen screen){
+		super(pos, screen, NodeType.STORAGE.getRegion());
 		
 		for(ResourceType type : ResourceType.values()){
 			resources.put(type, 0);
@@ -33,8 +33,17 @@ public class GranaryNode extends Node{
 	}
 	
 	@Override
+	public void unitReached(Unit unit){
+		if(unit instanceof Resource){
+			Resource res = (Resource) unit;
+			
+			addResource(res.getType(), 1);
+		}
+	}
+	
+	@Override
 	public void fillDescription(Table descTable, LabelStyle style){
-		descTable.add(new Label("Granary", style)).colspan(2);
+		descTable.add(new Label("Storage", style)).colspan(2);
 		descTable.row();
 		
 		for(ResourceType type : ResourceType.values()){

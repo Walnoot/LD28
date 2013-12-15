@@ -5,7 +5,7 @@ import com.badlogic.gdx.utils.StringBuilder;
 public class NotificationText implements CharSequence{
 	public final static NotificationText instance = new NotificationText();
 	
-	private String[] lines = new String[8];
+	private String[] lines = new String[4];
 	private StringBuilder builder = new StringBuilder();
 	
 	public boolean dirty;

@@ -78,4 +78,7 @@ public abstract class Node{
 	public Array<Connection> getConnections(){
 		return connections;
 	}
+	
+	public void unitReached(Unit unit){
+	}
 }

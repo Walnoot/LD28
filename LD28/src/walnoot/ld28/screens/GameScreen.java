@@ -6,9 +6,9 @@ import walnoot.ld28.NotificationText;
 import walnoot.ld28.Util;
 import walnoot.ld28.world.Background;
 import walnoot.ld28.world.Connection;
-import walnoot.ld28.world.GranaryNode;
 import walnoot.ld28.world.Node;
 import walnoot.ld28.world.NodeType;
+import walnoot.ld28.world.StorageNode;
 import walnoot.ld28.world.Unit;
 
 import com.badlogic.gdx.Gdx;
@@ -16,7 +16,6 @@ import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -69,9 +68,9 @@ public class GameScreen extends UpdateScreen{
 		batch = new SpriteBatch(100, shader);
 		camera = new OrthographicCamera();
 		
-		addNode(new GranaryNode(Vector2.Zero, this));
+		addNode(new StorageNode(Vector2.Zero, this));
 		
-		preview = new Sprite(Util.ATLAS.findRegion("granary"));
+		preview = new Sprite(Util.ATLAS.findRegion("storage"));
 		preview.setSize(1f, 1f);
 		preview.setOrigin(0.5f, 0.5f);
 		
@@ -83,9 +82,8 @@ public class GameScreen extends UpdateScreen{
 	private void setupUI(){
 		game.getStage().clear();
 		
-		BitmapFont font = new BitmapFont();
 		TextureRegionDrawable drawable = new TextureRegionDrawable(Util.ATLAS.findRegion("border"));
-		ListStyle style = new ListStyle(font, Color.WHITE, Color.GRAY, drawable);
+		ListStyle style = new ListStyle(Util.FONT, Color.WHITE, Color.LIGHT_GRAY, drawable);
 		
 		table = new Table();
 		table.top().left().pad(32f).setFillParent(true);
@@ -102,6 +100,7 @@ public class GameScreen extends UpdateScreen{
 				
 				if(index != -1){
 					if(Mode.values()[index] == Mode.NONE) event.cancel();
+					
 					mode = Mode.values()[index];
 				}
 			}
@@ -111,13 +110,13 @@ public class GameScreen extends UpdateScreen{
 		dialogTable.bottom().right().setFillParent(true);
 		game.getStage().addActor(dialogTable);
 		
-		labelStyle = new LabelStyle(font, Color.WHITE);
+		labelStyle = new LabelStyle(Util.FONT, Color.WHITE);
 		label = new Label(NotificationText.instance, labelStyle);
 		label.setWrap(true);
 		dialogTable.add(label).width(300f);
 		
 		descTable = new Table();
-		descTable.bottom().left().setFillParent(true);
+		descTable.bottom().left().pad(32f).setFillParent(true);
 		game.getStage().addActor(descTable);
 	}
 	
@@ -329,7 +328,7 @@ public class GameScreen extends UpdateScreen{
 	}
 	
 	private enum Mode{
-		NONE("Options:"), BUILD("Build (B)"), BUILD_ROAD("Build Road (R)");
+		NONE("Options:"), BUILD("Build (B)"), BUILD_ROAD("Build Road (R)"), MOVE_RESOURCE_SELECT("Move resources");
 		
 		private final String name;
 		

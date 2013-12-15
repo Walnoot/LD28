@@ -10,16 +10,22 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 public enum NodeType{
-	GRANARY("Granary", "granary", InputHandler.get().buildGranary){
+	STORAGE("Storage", "storage", InputHandler.get().buildStorage){
 		@Override
 		public Node newNode(Vector2 pos, GameScreen screen){
-			return new GranaryNode(pos, screen);
+			return new StorageNode(pos, screen);
 		}
 	},
 	FARM("Farm", "farm", InputHandler.get().buildFarm){
 		@Override
 		public Node newNode(Vector2 pos, GameScreen screen){
 			return new FarmNode(pos, screen);
+		}
+	},
+	LUMBER_CAMP("Lumber Camp", "lumber", InputHandler.get().buildLumber){
+		@Override
+		public Node newNode(Vector2 pos, GameScreen screen){
+			return new LumberNode(pos, screen);
 		}
 	};
 	

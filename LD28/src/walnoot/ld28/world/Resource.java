@@ -8,11 +8,8 @@ public class Resource extends Unit{
 		this.type = type;
 	}
 	
-	@Override
-	protected void reachedDestination(Node node){
-		if(node instanceof GranaryNode){
-			((GranaryNode) node).addResource(type, 1);
-		}
+	public ResourceType getType(){
+		return type;
 	}
 	
 	public enum ResourceType{

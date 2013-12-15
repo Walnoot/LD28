@@ -62,6 +62,7 @@ public class Unit{
 	}
 	
 	protected void reachedDestination(Node node){
+		node.unitReached(this);
 	}
 	
 	public void remove(){

@@ -24,7 +24,8 @@ public class InputHandler implements InputProcessor{
 	public Key quit = new Key(ESCAPE);
 	
 	public Key buildFarm = new Key(F);
-	public Key buildGranary = new Key(G);
+	public Key buildLumber = new Key(L);
+	public Key buildStorage = new Key(G);
 	
 	private ArrayList<Key> keys;
 	private boolean keyDown;

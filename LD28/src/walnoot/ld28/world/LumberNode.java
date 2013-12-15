@@ -5,13 +5,13 @@ import walnoot.ld28.world.Resource.ResourceType;
 
 import com.badlogic.gdx.math.Vector2;
 
-public class FarmNode extends ResourceNode{
-	public FarmNode(Vector2 pos, GameScreen screen){
-		super(pos, screen, NodeType.FARM.getRegion());
+public class LumberNode extends ResourceNode{
+	public LumberNode(Vector2 pos, GameScreen screen){
+		super(pos, screen, NodeType.LUMBER_CAMP.getRegion());
 	}
 	
 	@Override
 	protected ResourceType getType(){
-		return ResourceType.GRAIN;
+		return ResourceType.WOOD;
 	}
 }
