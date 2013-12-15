@@ -8,8 +8,15 @@ public class Resource extends Unit{
 		this.type = type;
 	}
 	
+	@Override
+	protected void reachedDestination(Node node){
+		if(node instanceof GranaryNode){
+			((GranaryNode) node).addResource(type, 1);
+		}
+	}
+	
 	public enum ResourceType{
-		GRAIN("grain");
+		GRAIN("grain"), WOOD("wood");
 		
 		private final String name;
 		

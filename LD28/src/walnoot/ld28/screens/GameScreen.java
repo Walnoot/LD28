@@ -2,6 +2,7 @@ package walnoot.ld28.screens;
 
 import walnoot.ld28.InputHandler;
 import walnoot.ld28.LD28Game;
+import walnoot.ld28.NotificationText;
 import walnoot.ld28.Util;
 import walnoot.ld28.world.Background;
 import walnoot.ld28.world.Connection;
@@ -22,9 +23,13 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.List;
 import com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 
@@ -46,7 +51,12 @@ public class GameScreen extends UpdateScreen{
 	private Sprite preview;
 	
 	private Mode mode = Mode.NONE;
-	private List buildList;
+	private List buildList, modeList;
+	private boolean buildListVisible, modeListVisible;
+	private Table table;
+	private Label label;
+	private Table descTable;
+	private LabelStyle labelStyle;
 	
 	private Background background;
 	
@@ -77,12 +87,38 @@ public class GameScreen extends UpdateScreen{
 		TextureRegionDrawable drawable = new TextureRegionDrawable(Util.ATLAS.findRegion("border"));
 		ListStyle style = new ListStyle(font, Color.WHITE, Color.GRAY, drawable);
 		
-		Table table = new Table();
-		table.top().left().setFillParent(true);
+		table = new Table();
+		table.top().left().pad(32f).setFillParent(true);
 		game.getStage().addActor(table);
 		
 		buildList = new List(NodeType.values(), style);
-		table.add(buildList);
+		
+		modeList = new List(Mode.values(), style);
+		modeList.setSelectedIndex(-1);
+		modeList.addListener(new ChangeListener(){
+			@Override
+			public void changed(ChangeEvent event, Actor actor){
+				int index = modeList.getSelectedIndex();
+				
+				if(index != -1){
+					if(Mode.values()[index] == Mode.NONE) event.cancel();
+					mode = Mode.values()[index];
+				}
+			}
+		});
+		
+		Table dialogTable = new Table();
+		dialogTable.bottom().right().setFillParent(true);
+		game.getStage().addActor(dialogTable);
+		
+		labelStyle = new LabelStyle(font, Color.WHITE);
+		label = new Label(NotificationText.instance, labelStyle);
+		label.setWrap(true);
+		dialogTable.add(label).width(300f);
+		
+		descTable = new Table();
+		descTable.bottom().left().setFillParent(true);
+		game.getStage().addActor(descTable);
 	}
 	
 	@Override
@@ -138,18 +174,17 @@ public class GameScreen extends UpdateScreen{
 		switch (mode){
 			case NONE:
 				if(InputHandler.get().isJustTouched(Buttons.LEFT)){
-					Node node = null;
+					Node node = getNode(TMP_2);
 					
-					for(Node n : nodes){
-						if(n.hits(TMP_2)){
-							node = n;
-							break;
-						}
-					}
+					descTable.clear();
 					
 					if(selectedNode != null) selectedNode.setSelected(false);
 					selectedNode = node;
-					if(node != null) selectedNode.setSelected(true);
+					if(node != null){
+						selectedNode.setSelected(true);
+						
+						selectedNode.fillDescription(descTable, labelStyle);
+					}
 				}
 				
 				break;
@@ -162,6 +197,8 @@ public class GameScreen extends UpdateScreen{
 						break;
 					}
 				}
+				
+				if(selectedNode == null) break;
 				
 				TMP_2.sub(selectedNode.position);
 				
@@ -178,6 +215,7 @@ public class GameScreen extends UpdateScreen{
 				
 				preview.setPosition(TMP_2.x - preview.getOriginX(), TMP_2.y - preview.getOriginY());
 				preview.setColor(buildable ? Color.WHITE : Color.RED);
+				preview.setRegion(NodeType.values()[buildList.getSelectedIndex()].getRegion());
 				
 				if(buildable && InputHandler.get().isJustTouched(Buttons.LEFT)){
 					Node newNode = getNodeType().newNode(TMP_2, this);
@@ -185,6 +223,28 @@ public class GameScreen extends UpdateScreen{
 					addConnection(new Connection(selectedNode, newNode));
 					
 					mode = Mode.NONE;
+				}
+				
+				if(InputHandler.get().isJustTouched(Buttons.RIGHT)) mode = Mode.NONE;
+				
+				break;
+			case BUILD_ROAD:
+				if(InputHandler.get().isJustTouched(Buttons.LEFT)){
+					Node node = getNode(TMP_2);
+					
+					if(node.position.dst2(selectedNode.position) < MIN_DISTANCE * MIN_DISTANCE){
+						NotificationText.instance.addLine("Road too short!");
+						break;
+					}else if(node.position.dst2(selectedNode.position) > MAX_DISTANCE * MAX_DISTANCE){
+						NotificationText.instance.addLine("Road too long!");
+						break;
+					}
+					
+					if(node != null && node != selectedNode && !node.connectsTo(selectedNode)){
+						addConnection(new Connection(node, selectedNode));
+						
+						mode = Mode.NONE;
+					}
 				}
 				
 				if(InputHandler.get().isJustTouched(Buttons.RIGHT)) mode = Mode.NONE;
@@ -207,10 +267,43 @@ public class GameScreen extends UpdateScreen{
 		camera.zoom += InputHandler.get().getScrollAmount();
 		camera.zoom = MathUtils.clamp(camera.zoom, 1f, 10f);
 		
-		if(InputHandler.get().build.isJustPressed() && selectedNode != null) mode = Mode.BUILD;
-		else if(InputHandler.get().quit.isJustPressed()) mode = Mode.NONE;
+		if(selectedNode != null){
+			if(InputHandler.get().build.isJustPressed()) mode = Mode.BUILD;
+			if(InputHandler.get().buildRoad.isJustPressed()) mode = Mode.BUILD_ROAD;
+		}
 		
-		buildList.setVisible(mode == Mode.BUILD);
+		if(InputHandler.get().quit.isJustPressed()) mode = Mode.NONE;
+		
+		if(mode == Mode.BUILD){
+			if(!buildListVisible){
+				table.add(buildList);
+				buildListVisible = true;
+			}
+		}else if(buildListVisible){
+			table.removeActor(buildList);
+			buildListVisible = false;
+		}
+		
+		if(mode == Mode.NONE && selectedNode != null){
+			if(!modeListVisible){
+				modeList.setSelectedIndex(-1);
+				table.add(modeList);
+				modeListVisible = true;
+			}
+		}else if(modeListVisible){
+			table.removeActor(modeList);
+			modeListVisible = false;
+		}
+		
+		if(NotificationText.instance.dirty) label.setText(NotificationText.instance);
+	}
+	
+	private Node getNode(Vector2 pos){
+		for(Node n : nodes){
+			if(n.hits(pos)) return n;
+		}
+		
+		return null;
 	}
 	
 	private NodeType getNodeType(){
@@ -236,6 +329,17 @@ public class GameScreen extends UpdateScreen{
 	}
 	
 	private enum Mode{
-		NONE, BUILD;
+		NONE("Options:"), BUILD("Build (B)"), BUILD_ROAD("Build Road (R)");
+		
+		private final String name;
+		
+		private Mode(String name){
+			this.name = name;
+		}
+		
+		@Override
+		public String toString(){
+			return name;
+		}
 	}
 }

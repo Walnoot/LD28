@@ -20,6 +20,7 @@ public class InputHandler implements InputProcessor{
 	public Key right = new Key(D, RIGHT);
 	
 	public Key build = new Key(B);
+	public Key buildRoad = new Key(R);
 	public Key quit = new Key(ESCAPE);
 	
 	public Key buildFarm = new Key(F);

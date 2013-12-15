@@ -47,6 +47,10 @@ public class Unit{
 			while(progress > path.distance){
 				progress -= path.distance;
 				
+				if(path.parent == null){
+					reachedDestination(path.node);
+				}
+				
 				path = path.parent;
 				
 				if(path == null){
@@ -55,6 +59,9 @@ public class Unit{
 				}
 			}
 		}
+	}
+	
+	protected void reachedDestination(Node node){
 	}
 	
 	public void remove(){

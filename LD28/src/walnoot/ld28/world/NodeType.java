@@ -2,9 +2,11 @@ package walnoot.ld28.world;
 
 import walnoot.ld28.InputHandler;
 import walnoot.ld28.InputHandler.Key;
+import walnoot.ld28.Util;
 import walnoot.ld28.screens.GameScreen;
 
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 public enum NodeType{
@@ -22,25 +24,26 @@ public enum NodeType{
 	};
 	
 	private final String name;
-	private final String spriteName;
 	private final Key key;
+	private TextureRegion region;
 	
 	private NodeType(String name, String spriteName, Key key){
 		this.key = key;
 		this.name = name + " (" + Keys.toString(key.getFirstKey()) + ")";
-		this.spriteName = spriteName;
+		
+		region = Util.ATLAS.findRegion(spriteName);
 	}
 	
 	public String toString(){
 		return name;
 	}
 	
-	public String getSpriteName(){
-		return spriteName;
-	}
-	
 	public Key getKey(){
 		return key;
+	}
+	
+	public TextureRegion getRegion(){
+		return region;
 	}
 	
 	public abstract Node newNode(Vector2 pos, GameScreen screen);

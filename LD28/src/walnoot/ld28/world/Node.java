@@ -1,12 +1,14 @@
 package walnoot.ld28.world;
 
-import walnoot.ld28.Util;
 import walnoot.ld28.screens.GameScreen;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
 
 public abstract class Node{
@@ -18,15 +20,15 @@ public abstract class Node{
 	
 	private Array<Connection> connections = new Array<Connection>(false, 4);
 	
-	public Node(Vector2 pos, GameScreen screen, String spriteName){
-		this(pos.x, pos.y, screen, spriteName);
+	public Node(Vector2 pos, GameScreen screen, TextureRegion region){
+		this(pos.x, pos.y, screen, region);
 	}
 	
-	public Node(float x, float y, GameScreen screen, String spriteName){
+	public Node(float x, float y, GameScreen screen, TextureRegion region){
 		this.screen = screen;
 		position.set(x, y);
 		
-		sprite = new Sprite(Util.ATLAS.findRegion(spriteName));
+		sprite = new Sprite(region);
 		sprite.setSize(1f, 1f);
 		sprite.setOrigin(0.5f, 0.5f);
 	}
@@ -48,6 +50,17 @@ public abstract class Node{
 	
 	public boolean hits(Vector2 pos, float radius){
 		return position.dst2(pos) < (radius + 0.5f) * (radius + 0.5f);
+	}
+	
+	public boolean connectsTo(Node selectedNode){
+		for(Connection c : connections){
+			if(c.first == selectedNode || c.second == selectedNode) return true;
+		}
+		
+		return false;
+	}
+	
+	public void fillDescription(Table descTable, LabelStyle style){
 	}
 	
 	public void addConnection(Connection c){
